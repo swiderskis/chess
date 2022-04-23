@@ -6,6 +6,16 @@ INSERT SUMMARY HERE
 
 using namespace std;
 
+std::ostream& bold_on(std::ostream& os)
+{
+    return os << "\e[1m";
+}
+
+std::ostream& bold_off(std::ostream& os)
+{
+    return os << "\e[0m";
+}
+
 // Holds information related to pieces on the board
 class Piece {
 protected:
@@ -175,10 +185,13 @@ public:
 
     // Methods
     void print() {
-        cout << "+---+---+---+---+---+---+---+---+\n";
+        cout << "---+---+---+---+---+---+---+---+---+\n";
 
         for (int r = 7; r >= 0; r--) {
             for (int c = 0; c < 8; c++) {
+                if (c == 0) {
+                    cout << " " << r + 1 << " ";
+                }
                 if (position[r][c] != 0) {
                     cout << "| " << position[r][c]->getName() << " ";
                 } else {
@@ -189,8 +202,9 @@ public:
                     cout << "|";
                 }
             }
-            cout << "\n+---+---+---+---+---+---+---+---+\n";
+            cout << "\n---+---+---+---+---+---+---+---+---+\n";
         }
+        cout << "   | A | B | C | D | E | F | G | H |\n";
     }
 
 };
