@@ -3,18 +3,10 @@ INSERT SUMMARY HERE
 */
 
 #include <iostream>
+#include <string>
+#include <cmath>
 
 using namespace std;
-
-std::ostream& bold_on(std::ostream& os)
-{
-    return os << "\e[1m";
-}
-
-std::ostream& bold_off(std::ostream& os)
-{
-    return os << "\e[0m";
-}
 
 // Holds information related to pieces on the board
 class Piece {
@@ -26,17 +18,21 @@ public:
     Piece(char colour) : mColour(colour) {}
 
     // Methods
+    // Return piece colour
     char getColour() {
         return mColour;
     }
 
+    // Return name of piece
     virtual char getName() = 0;
+
+    // Check if input move is possible for piece
+    virtual bool validPieceMove(int dRow, int dCol) = 0;
 };
 
 class PieceKing : public Piece {
 public:
     // Constructor
-    // Taken from https://cppsecrets.com/users/22319897989712197103975756505164103109971051084699111109/Chess-Game-in-C00.php
     PieceKing(char colour) : Piece(colour) {}
 
     // Methods
@@ -48,6 +44,14 @@ public:
         case 'B':
             return 'k';
             break;
+        }
+    }
+
+    bool validPieceMove(int dRow, int dCol) {
+        if (abs(dRow) > 1 || abs(dCol) > 1) {
+            return false;
+        } else {
+            return true;
         }
     }
 };
@@ -68,6 +72,16 @@ public:
             break;
         }
     }
+
+    bool validPieceMove(int dRow, int dCol) {
+        if (dRow == 0 || dCol == 0) {
+            return true;
+        } else if (abs(dRow/dCol) != 1) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 };
 
 class PieceBishop : public Piece {
@@ -84,6 +98,16 @@ public:
         case 'B':
             return 'b';
             break;
+        }
+    }
+
+    bool validPieceMove(int dRow, int dCol) {
+        if (dRow == 0 || dCol == 0) {
+            return false;
+        } else if (abs(dRow/dCol != 1)) {
+            return false;
+        } else {
+            return true;
         }
     }
 };
@@ -104,6 +128,13 @@ public:
             break;
         }
     }
+    bool validPieceMove(int dRow, int dCol) {
+        if ((abs(dRow) == 2 && abs(dCol) == 1) || (abs(dRow) == 1 && abs(dCol) == 2)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 };
 
 class PieceRook : public Piece {
@@ -122,12 +153,23 @@ public:
             break;
         }
     }
+
+    bool validPieceMove(int dRow, int dCol) {
+        if (dRow != 0 && dCol != 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 };
 
 class PiecePawn : public Piece {
+private:
+    bool hasMoved;
+    int direction;
 public:
     // Constructor
-    PiecePawn(char colour) : Piece(colour) {}
+    PiecePawn(char colour) : Piece(colour), hasMoved(false), direction(setDirection()) {}
 
     // Methods
     char getName() {
@@ -140,51 +182,127 @@ public:
             break;
         }
     }
+
+    bool validPieceMove(int dRow, int dCol) {
+        if (dRow == 0) {
+            return false;
+        } else if (dRow == direction*2 && dCol == 0 && hasMoved == false) {
+            hasMoved = true;
+            return true;
+        } else if (dRow == direction && abs(dCol) < 2) {
+            hasMoved = true;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // Sets direction of pawn based on colour
+    int setDirection() {
+        switch (getColour()) {
+        case 'W':
+            return 1;
+            break;
+        case 'B':
+            return -1;
+            break;
+        }
+    }
 };
 
-class Board {
+class Menu {
 private:
-    Piece* position[8][8];
+    string invalidCharInput = "ERROR: Invalid column input!\n";
+    string invalidIntInput = "ERROR: Invalid row input!\n";
+public:
+    // Methods
+
+    // Checks if char input is valid
+    // Taken from https://www.codegrepper.com/code-examples/cpp/check+if+char+in+string+c%2B%2B
+    bool validUserInput(char input, string validInput) {
+        if (validInput.find(input) != std::string::npos) {
+            return true;
+        } else {
+            cout << invalidCharInput;
+            return false;
+        }
+    }
+
+    // Checks if int input is valid
+    bool validUserInput(int input, int minValidInput, int maxValidInput) {
+        if (input < minValidInput || input > maxValidInput) {
+            cout << invalidIntInput;
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    // Converts char col input into int input
+    int charToIntInput(char input) {
+        string chars = "ABCDEFGH";
+        return chars.find(input);
+
+    }
+};
+
+class Game {
+
+private:
+    Piece* board[8][8];
+    string inputTextCurrPos = "\nPlease input the position of the piece you would like to move:\n";
+    string inputTextNewPos = "\nPlease input the position you would like to move this piece to:\n";
+    string validInput = "ABCDEFGH";
+
+    string errorCheckPieceCanMove = "ERROR: This piece cannot make a legal move!\n";
+    string errorCheckPieceOppColour = "ERROR: This piece does not belong to you!\n";
+    string errorCheckPiecePlayerColour = "ERROR: This position contains one of your pieces!\n";
+    string errorCheckPieceColourEmpty = "ERROR: There is no piece in this square!\n";
+    string errorInvalidMove = "ERROR: Invalid move!\n";
 
 public:
     // Constructor
-    Board() {
+    Game() {
+
         for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
-                position[r][c] = 0;
+                board[r][c] = 0;
             }
         }
+
         // Initialise white
-        position[0][0] = new PieceRook('W');
-        position[0][1] = new PieceBishop('W');
-        position[0][2] = new PieceKnight('W');
-        position[0][3] = new PieceQueen('W');
-        position[0][4] = new PieceKing('W');
-        position[0][5] = new PieceKnight('W');
-        position[0][6] = new PieceBishop('W');
-        position[0][7] = new PieceRook('W');
+        board[0][0] = new PieceRook('W');
+        board[0][1] = new PieceBishop('W');
+        board[0][2] = new PieceKnight('W');
+        board[0][3] = new PieceQueen('W');
+        board[0][4] = new PieceKing('W');
+        board[0][5] = new PieceKnight('W');
+        board[0][6] = new PieceBishop('W');
+        board[0][7] = new PieceRook('W');
 
         for (int c = 0; c < 8; c++) {
-            position[1][c] = new PiecePawn('W');
+            board[1][c] = new PiecePawn('W');
         }
 
         // Initialise black
-        position[7][0] = new PieceRook('B');
-        position[7][1] = new PieceBishop('B');
-        position[7][2] = new PieceKnight('B');
-        position[7][3] = new PieceQueen('B');
-        position[7][4] = new PieceKing('B');
-        position[7][5] = new PieceKnight('B');
-        position[7][6] = new PieceBishop('B');
-        position[7][7] = new PieceRook('B');
+        board[7][0] = new PieceRook('B');
+        board[7][1] = new PieceBishop('B');
+        board[7][2] = new PieceKnight('B');
+        board[7][3] = new PieceQueen('B');
+        board[7][4] = new PieceKing('B');
+        board[7][5] = new PieceKnight('B');
+        board[7][6] = new PieceBishop('B');
+        board[7][7] = new PieceRook('B');
 
         for (int c = 0; c < 8; c++) {
-            position[6][c] = new PiecePawn('B');
+            board[6][c] = new PiecePawn('B');
         }
     }
 
     // Methods
-    void print() {
+
+    // Prints current board state
+    void printBoard() {
         cout << "---+---+---+---+---+---+---+---+---+\n";
 
         for (int r = 7; r >= 0; r--) {
@@ -192,8 +310,9 @@ public:
                 if (c == 0) {
                     cout << " " << r + 1 << " ";
                 }
-                if (position[r][c] != 0) {
-                    cout << "| " << position[r][c]->getName() << " ";
+
+                if (board[r][c] != 0) {
+                    cout << "| " << board[r][c]->getName() << " ";
                 } else {
                     cout << "|   ";
                 }
@@ -206,13 +325,151 @@ public:
         }
         cout << "   | A | B | C | D | E | F | G | H |\n";
     }
+    // Prompts player to move a piece, and checks to ensure the move is valid
+    void movePiece(char colour) {
+        Menu menu;
 
+        bool validCol = false, validRow = false, pieceCanMove = false, pieceBelongsToPlayer = false, pieceValidMove;
+
+        char colCurrStr, colNewStr;
+
+        int rowCurr, colCurr, rowNew, colNew;
+        int dRow, dCol;
+
+        const int minRow = 1, maxRow = 8;
+
+        printBoard();
+
+        cout << inputTextCurrPos;
+
+        // Checks if input is in bounds of board, if piece selected can move, and if piece belongs to player
+        while (validCol == false || validRow == false || pieceCanMove == false || pieceBelongsToPlayer == false) {
+            cin >> colCurrStr >> rowCurr;
+
+            validCol = menu.validUserInput(colCurrStr, validInput);
+            if (validCol == true) {
+                colCurr = menu.charToIntInput(colCurrStr);
+            }
+
+            validRow = menu.validUserInput(rowCurr, minRow, maxRow);
+            if (validRow == true) {
+                rowCurr--;
+            }
+
+            if (validCol == true && validRow == true) {
+                pieceCanMove = checkPieceCanMove(rowCurr, colCurr, colour);
+                pieceBelongsToPlayer = checkPieceColour(rowCurr, colCurr, colour, false);
+
+            }
+        }
+
+        validCol = false;
+        validRow = false;
+
+        cout << inputTextNewPos;
+
+        // Checks if input is in bounds of board, and if piece can move to location
+        while (validCol == false || validRow == false || pieceBelongsToPlayer == true || pieceValidMove == false) {
+            cin >> colNewStr >> rowNew;
+
+            validCol = menu.validUserInput(colNewStr, validInput);
+            if (validCol == true) {
+                colNew = menu.charToIntInput(colNewStr);
+            }
+
+            validRow = menu.validUserInput(rowNew, minRow, maxRow);
+            if (validRow == true) {
+                rowNew--;
+            }
+
+            if (validCol == true && validRow == true) {
+                dRow = rowNew - rowCurr;
+                dCol = colNew - colCurr;
+
+                pieceValidMove = board[rowCurr][colCurr]->validPieceMove(dRow, dCol);
+
+                // Check piece is actually moving, else statement so error does not double print
+                if (dRow == 0 && dCol == 0) {
+                    pieceValidMove = false;
+                } else {
+                    pieceBelongsToPlayer = checkPieceColour(rowNew, colNew, colour, true);
+                }
+
+                // Special move checks for pawns
+                if (board[rowCurr][colCurr]->getName() == 'P' || board[rowCurr][colCurr]->getName() == 'p') {
+                    if ((dCol == 0 && board[rowNew][colNew] != 0) || (dCol != 0 && board[rowNew][colNew] == 0)) {
+                        pieceValidMove = false;
+                    }
+                }
+
+                // Check to ensure piece is not blocked from moving to desired location (except for knights)
+                if (board[rowCurr][colCurr]->getName() != 'N' || board[rowCurr][colCurr]->getName() != 'n') {
+                    int r = dRow, c = dCol;
+
+                    while (abs(r) > 1 || abs(c) > 1) {
+                        if (r > 0) {
+                            r--;
+                        } else if (r < 0) {
+                            r++;
+                        }
+
+                        if (c > 0) {
+                            c--;
+                        } else if (c < 0) {
+                            c++;
+                        }
+
+                        if (board[rowCurr + r][colCurr + c] != 0) {
+                            pieceValidMove = false;
+                        }
+                    }
+                }
+
+                if (pieceValidMove == false) {
+                    cout << errorInvalidMove;
+                }
+            }
+        }
+
+        board[rowNew][colNew] = board[rowCurr][colCurr];
+        board[rowCurr][colCurr] = 0;
+
+    }
+
+    //UNFINISHED Checks if piece selected can make a legal move
+    bool checkPieceCanMove(int r, int c, char colour) {
+        return true;
+    }
+
+    // Checks if piece selected belongs to player
+    // errorWhen bool used to determine what type of inputs are invalid
+    bool checkPieceColour(int r, int c, char colour, bool errorWhen) {
+        if (board[r][c] == 0) {
+            if (errorWhen == false) {
+                cout << errorCheckPieceColourEmpty;
+            }
+            return false;
+
+        } else if (board[r][c]->getColour() != colour) {
+            if (errorWhen == false) {
+                cout << errorCheckPieceOppColour;
+            }
+            return false;
+
+        } else {
+            if (errorWhen == true) {
+                cout << errorCheckPiecePlayerColour;
+            }
+            return true;
+        }
+    }
 };
 
 int main() {
-    Board gameBoard;
+    Game newGame;
 
-    gameBoard.print();
+    newGame.movePiece('W');
+    newGame.printBoard();
 
     return 0;
 }
