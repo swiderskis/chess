@@ -5,6 +5,7 @@ INSERT SUMMARY HERE
 #include <iostream>
 #include <string>
 #include <cmath>
+#include <stdlib.h>
 
 using namespace std;
 
@@ -244,13 +245,31 @@ public:
         return chars.find(input);
 
     }
+    // Clears console
+    // Taken from https://stackoverflow.com/questions/6486289/how-can-i-clear-console
+    void clearConsole() {
+#if defined _WIN32
+        system("cls");
+        //clrscr(); // including header file : conio.h
+#elif defined (__LINUX__) || defined(__gnu_linux__) || defined(__linux__)
+        system("clear");
+        //std::cout<< u8"\033[2J\033[1;1H"; //Using ANSI Escape Sequences
+#elif defined (__APPLE__)
+        system("clear");
+#endif
+    }
 };
 
 class Game {
 
 private:
     Piece* board[8][8];
-    string inputTextCurrPos = "\nPlease input the position of the piece you would like to move:\n";
+
+    Menu menu;
+
+    string inputTextWhite = "\nWhite, ";
+    string inputTextBlack = "\nBlack, ";
+    string inputTextCurrPos = "please input the position of the piece you would like to move:\n";
     string inputTextNewPos = "\nPlease input the position you would like to move this piece to:\n";
     string validInput = "ABCDEFGH";
 
@@ -303,6 +322,8 @@ public:
 
     // Prints current board state
     void printBoard() {
+        menu.clearConsole();
+
         cout << "---+---+---+---+---+---+---+---+---+\n";
 
         for (int r = 7; r >= 0; r--) {
@@ -325,10 +346,9 @@ public:
         }
         cout << "   | A | B | C | D | E | F | G | H |\n";
     }
+
     // Prompts player to move a piece, and checks to ensure the move is valid
     void movePiece(char colour) {
-        Menu menu;
-
         bool validCol = false, validRow = false, pieceCanMove = false, pieceBelongsToPlayer = false, pieceValidMove;
 
         char colCurrStr, colNewStr;
@@ -340,6 +360,15 @@ public:
 
         printBoard();
 
+        switch (colour) {
+        case 'W':
+            cout << inputTextWhite;
+            break;
+        case 'B':
+            cout << inputTextBlack;
+            break;
+        }
+
         cout << inputTextCurrPos;
 
         // Checks if input is in bounds of board, if piece selected can move, and if piece belongs to player
@@ -349,11 +378,15 @@ public:
             validCol = menu.validUserInput(colCurrStr, validInput);
             if (validCol == true) {
                 colCurr = menu.charToIntInput(colCurrStr);
+            } else {
+                continue;
             }
 
             validRow = menu.validUserInput(rowCurr, minRow, maxRow);
             if (validRow == true) {
                 rowCurr--;
+            } else {
+                continue;
             }
 
             if (validCol == true && validRow == true) {
@@ -375,11 +408,15 @@ public:
             validCol = menu.validUserInput(colNewStr, validInput);
             if (validCol == true) {
                 colNew = menu.charToIntInput(colNewStr);
+            } else {
+                continue;
             }
 
             validRow = menu.validUserInput(rowNew, minRow, maxRow);
             if (validRow == true) {
                 rowNew--;
+            } else {
+                continue;
             }
 
             if (validCol == true && validRow == true) {
@@ -388,7 +425,8 @@ public:
 
                 pieceValidMove = board[rowCurr][colCurr]->validPieceMove(dRow, dCol);
 
-                // Check piece is actually moving, else statement so error does not double print
+                // Check piece is moving to different spot
+                // Put into if else statement so error does not double print
                 if (dRow == 0 && dCol == 0) {
                     pieceValidMove = false;
                 } else {
@@ -421,6 +459,7 @@ public:
 
                         if (board[rowCurr + r][colCurr + c] != 0) {
                             pieceValidMove = false;
+                            break;
                         }
                     }
                 }
@@ -433,6 +472,38 @@ public:
 
         board[rowNew][colNew] = board[rowCurr][colCurr];
         board[rowCurr][colCurr] = 0;
+
+    }
+
+    // Runs the full game until checkmate is reached
+    void game() {
+        bool checkmateWhite = false, checkmateBlack = false, checkWhite = false, checkBlack = false;
+        char turn = 'W';
+
+        string winWhite = "White wins!\n";
+        string winBlack = "Black wins!\n";
+
+        while (checkmateWhite == false || checkmateBlack == false) {
+
+            movePiece(turn);
+
+            switch (turn) {
+            case 'W':
+                turn = 'B';
+                break;
+            case 'B':
+                turn = 'W';
+                break;
+            }
+        }
+
+        if (checkmateBlack == true) {
+            cout << winWhite;
+        }
+
+        if (checkmateWhite == true) {
+            cout << winBlack;
+        }
 
     }
 
@@ -468,8 +539,7 @@ public:
 int main() {
     Game newGame;
 
-    newGame.movePiece('W');
-    newGame.printBoard();
+    newGame.game();
 
     return 0;
 }
