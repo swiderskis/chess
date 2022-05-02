@@ -77,7 +77,7 @@ public:
     bool validPieceMove(int dRow, int dCol) {
         if (dRow == 0 || dCol == 0) {
             return true;
-        } else if (abs(dRow/dCol) != 1) {
+        } else if (abs(dRow) - abs(dCol) != 0) {
             return false;
         } else {
             return true;
@@ -105,7 +105,7 @@ public:
     bool validPieceMove(int dRow, int dCol) {
         if (dRow == 0 || dCol == 0) {
             return false;
-        } else if (abs(dRow/dCol != 1)) {
+        } else if (abs(dRow) - abs(dCol) != 0) {
             return false;
         } else {
             return true;
@@ -129,6 +129,7 @@ public:
             break;
         }
     }
+
     bool validPieceMove(int dRow, int dCol) {
         if ((abs(dRow) == 2 && abs(dCol) == 1) || (abs(dRow) == 1 && abs(dCol) == 2)) {
             return true;
@@ -278,6 +279,7 @@ private:
     string errorCheckPiecePlayerColour = "ERROR: This position contains one of your pieces!\n";
     string errorCheckPieceColourEmpty = "ERROR: There is no piece in this square!\n";
     string errorInvalidMove = "ERROR: Invalid move!\n";
+    string errorObstructed = "ERROR: Piece is blocked from moving to this space!\n";
 
 public:
     // Constructor
@@ -349,7 +351,7 @@ public:
 
     // Prompts player to move a piece, and checks to ensure the move is valid
     void movePiece(char colour) {
-        bool validCol = false, validRow = false, pieceCanMove = false, pieceBelongsToPlayer = false, pieceValidMove;
+        bool validCol = false, validRow = false, pieceCanMove = false, pieceBelongsToPlayer = false, pieceValidMove = false, pieceObstructed = true;
 
         char colCurrStr, colNewStr;
 
@@ -402,7 +404,7 @@ public:
         cout << inputTextNewPos;
 
         // Checks if input is in bounds of board, and if piece can move to location
-        while (validCol == false || validRow == false || pieceBelongsToPlayer == true || pieceValidMove == false) {
+        while (validCol == false || validRow == false || pieceBelongsToPlayer == true || pieceValidMove == false || pieceObstructed == true) {
             cin >> colNewStr >> rowNew;
 
             validCol = menu.validUserInput(colNewStr, validInput);
@@ -441,27 +443,8 @@ public:
                 }
 
                 // Check to ensure piece is not blocked from moving to desired location (except for knights)
-                if (board[rowCurr][colCurr]->getName() != 'N' || board[rowCurr][colCurr]->getName() != 'n') {
-                    int r = dRow, c = dCol;
-
-                    while (abs(r) > 1 || abs(c) > 1) {
-                        if (r > 0) {
-                            r--;
-                        } else if (r < 0) {
-                            r++;
-                        }
-
-                        if (c > 0) {
-                            c--;
-                        } else if (c < 0) {
-                            c++;
-                        }
-
-                        if (board[rowCurr + r][colCurr + c] != 0) {
-                            pieceValidMove = false;
-                            break;
-                        }
-                    }
+                if ((board[rowCurr][colCurr]->getName() != 'N' || board[rowCurr][colCurr]->getName() != 'n') && pieceValidMove == true) {
+                    pieceObstructed = checkPieceObstructed(rowCurr, colCurr, dRow, dCol);
                 }
 
                 if (pieceValidMove == false) {
@@ -533,6 +516,34 @@ public:
             }
             return true;
         }
+    }
+
+    // Checks piece is not blocked from moving to desired location
+    bool checkPieceObstructed(int rowCurr, int colCurr, int dRow, int dCol) {
+        bool pieceObstructed = false;
+
+        while (abs(dRow) > 1 || abs(dCol) > 1) {
+            if (dRow > 0) {
+                dRow--;
+            } else if (dRow < 0) {
+                dRow++;
+            }
+
+            if (dCol > 0) {
+                dCol--;
+            } else if (dCol < 0) {
+                dCol++;
+            }
+
+            if (board[rowCurr + dRow][colCurr + dCol] != 0) {
+                pieceObstructed = true;
+                break;
+            }
+        }
+
+        cout << errorObstructed;
+
+        return pieceObstructed;
     }
 };
 
