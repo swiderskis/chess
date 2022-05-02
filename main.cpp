@@ -409,6 +409,7 @@ public:
             cin >> colNewStr >> rowNew;
 
             validCol = menu.validUserInput(colNewStr, validInput);
+
             if (validCol == true) {
                 colNew = menu.charToIntInput(colNewStr);
             } else {
@@ -416,6 +417,7 @@ public:
             }
 
             validRow = menu.validUserInput(rowNew, minRow, maxRow);
+
             if (validRow == true) {
                 rowNew--;
             } else {
@@ -444,8 +446,10 @@ public:
                 }
 
                 // Check to ensure piece is not blocked from moving to desired location (except for knights)
-                if ((board[rowCurr][colCurr]->getName() != 'N' || board[rowCurr][colCurr]->getName() != 'n') && pieceValidMove == true) {
+                if (board[rowCurr][colCurr]->getName() != 'N' && board[rowCurr][colCurr]->getName() != 'n' && pieceValidMove == true) {
                     pieceObstructed = checkPieceObstructed(rowCurr, colCurr, dRow, dCol);
+                } else {
+                    pieceObstructed = false;
                 }
 
                 if (pieceValidMove == false) {
@@ -456,7 +460,6 @@ public:
 
         board[rowNew][colNew] = board[rowCurr][colCurr];
         board[rowCurr][colCurr] = 0;
-
     }
 
     // Runs the full game until checkmate is reached
@@ -538,11 +541,10 @@ public:
 
             if (board[rowCurr + dRow][colCurr + dCol] != 0) {
                 pieceObstructed = true;
+                cout << errorObstructed;
                 break;
             }
         }
-
-        cout << errorObstructed;
 
         return pieceObstructed;
     }
