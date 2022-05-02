@@ -270,8 +270,8 @@ private:
 
     string inputTextWhite = "\nWhite, ";
     string inputTextBlack = "\nBlack, ";
-    string inputTextCurrPos = "please input the position of the piece you would like to move:\n";
-    string inputTextNewPos = "\nPlease input the position you would like to move this piece to:\n";
+    string inputTextCurrPos = "input the position of the piece you would like to move:\n";
+    string inputTextNewPos = "\nInput the position you would like to move this piece to:\n";
     string validInput = "ABCDEFGH";
 
     string errorCheckPieceCanMove = "ERROR: This piece cannot make a legal move!\n";
@@ -326,12 +326,12 @@ public:
     void printBoard() {
         menu.clearConsole();
 
-        cout << "---+---+---+---+---+---+---+---+---+\n";
+        cout << "---   +---+---+---+---+---+---+---+---+\n";
 
         for (int r = 7; r >= 0; r--) {
             for (int c = 0; c < 8; c++) {
                 if (c == 0) {
-                    cout << " " << r + 1 << " ";
+                    cout << " " << r + 1 << "    ";
                 }
 
                 if (board[r][c] != 0) {
@@ -344,9 +344,10 @@ public:
                     cout << "|";
                 }
             }
-            cout << "\n---+---+---+---+---+---+---+---+---+\n";
+            cout << "\n---   +---+---+---+---+---+---+---+---+\n";
         }
-        cout << "   | A | B | C | D | E | F | G | H |\n";
+        cout << "                                       \n";
+        cout << "      | A | B | C | D | E | F | G | H |\n";
     }
 
     // Prompts player to move a piece, and checks to ensure the move is valid
