@@ -394,8 +394,7 @@ public:
 
             if (validCol == true && validRow == true) {
                 pieceCanMove = checkPieceCanMove(rowCurr, colCurr, colour);
-                pieceBelongsToPlayer = checkPieceColour(rowCurr, colCurr, colour, false);
-
+                pieceBelongsToPlayer = checkPieceColour(rowCurr, colCurr, colour, false, true);
             }
         }
 
@@ -435,7 +434,7 @@ public:
                 if (dRow == 0 && dCol == 0) {
                     pieceValidMove = false;
                 } else {
-                    pieceBelongsToPlayer = checkPieceColour(rowNew, colNew, colour, true);
+                    pieceBelongsToPlayer = checkPieceColour(rowNew, colNew, colour, true, true);
                 }
 
                 // Special move checks for pawns
@@ -447,7 +446,7 @@ public:
 
                 // Check to ensure piece is not blocked from moving to desired location (except for knights)
                 if (board[rowCurr][colCurr]->getName() != 'N' && board[rowCurr][colCurr]->getName() != 'n' && pieceValidMove == true) {
-                    pieceObstructed = checkPieceObstructed(rowCurr, colCurr, dRow, dCol);
+                    pieceObstructed = checkPieceObstructed(rowCurr, colCurr, dRow, dCol, true);
                 } else {
                     pieceObstructed = false;
                 }
@@ -494,28 +493,68 @@ public:
 
     }
 
-    //UNFINISHED Checks if piece selected can make a legal move
-    bool checkPieceCanMove(int r, int c, char colour) {
-        return true;
+    // Checks if piece selected can make a legal move
+    bool checkPieceCanMove(int rowCurr, int colCurr, char colour) {
+        int dRow, dCol;
+        bool pieceCanMove = false, pieceValidMove = true, pieceBelongsToPlayer = true, pieceObstructed = false;
+
+        for (int rowNew = 0; rowNew < 8; rowNew++) {
+            for (int colNew = 0; colNew < 8; colNew++) {
+                dRow = rowNew - rowCurr;
+                dCol = colNew - colCurr;
+
+                if (dRow == 0 && dCol == 0) {
+                    continue;
+                } else {
+                    pieceValidMove = board[rowCurr][colCurr]->validPieceMove(dRow, dCol);
+                    pieceBelongsToPlayer = checkPieceColour(rowNew, colNew, colour, true, false);
+
+                    // Special move checks for pawns
+                    if (board[rowCurr][colCurr]->getName() == 'P' || board[rowCurr][colCurr]->getName() == 'p') {
+                        if ((dCol == 0 && board[rowNew][colNew] != 0) || (dCol != 0 && board[rowNew][colNew] == 0)) {
+                            pieceValidMove = false;
+                        }
+                    }
+
+                    // Check to ensure piece is not blocked from moving to desired location (except for knights)
+                    if (board[rowCurr][colCurr]->getName() != 'N' && board[rowCurr][colCurr]->getName() != 'n' && pieceValidMove == true) {
+                        pieceObstructed = checkPieceObstructed(rowCurr, colCurr, dRow, dCol, false);
+                    } else {
+                        pieceObstructed = false;
+                    }
+                }
+
+                if (pieceValidMove == true && pieceBelongsToPlayer == false && pieceObstructed == false) {
+                    pieceCanMove = true;
+                    return pieceCanMove;
+                }
+            }
+        }
+
+        if (pieceCanMove == false) {
+            cout << errorCheckPieceCanMove;
+        }
+
+        return pieceCanMove;
     }
 
     // Checks if piece selected belongs to player
     // errorWhen bool used to determine what type of inputs are invalid
-    bool checkPieceColour(int r, int c, char colour, bool errorWhen) {
+    bool checkPieceColour(int r, int c, char colour, bool errorWhen, bool printError) {
         if (board[r][c] == 0) {
-            if (errorWhen == false) {
+            if (errorWhen == false && printError == true) {
                 cout << errorCheckPieceColourEmpty;
             }
             return false;
 
         } else if (board[r][c]->getColour() != colour) {
-            if (errorWhen == false) {
+            if (errorWhen == false && printError == true) {
                 cout << errorCheckPieceOppColour;
             }
             return false;
 
         } else {
-            if (errorWhen == true) {
+            if (errorWhen == true && printError == true) {
                 cout << errorCheckPiecePlayerColour;
             }
             return true;
@@ -523,7 +562,7 @@ public:
     }
 
     // Checks piece is not blocked from moving to desired location
-    bool checkPieceObstructed(int rowCurr, int colCurr, int dRow, int dCol) {
+    bool checkPieceObstructed(int rowCurr, int colCurr, int dRow, int dCol, bool printError) {
         bool pieceObstructed = false;
 
         while (abs(dRow) > 1 || abs(dCol) > 1) {
@@ -541,7 +580,9 @@ public:
 
             if (board[rowCurr + dRow][colCurr + dCol] != 0) {
                 pieceObstructed = true;
-                cout << errorObstructed;
+                if (printError == true) {
+                    cout << errorObstructed;
+                }
                 break;
             }
         }
