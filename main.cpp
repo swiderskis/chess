@@ -513,19 +513,15 @@ public:
                     continue;
                 } else {
                     pieceValidMove = board[rowCurr][colCurr]->validPieceMove(dRow, dCol, false);
-                    cout << pieceValidMove;
                     pieceBelongsToPlayer = checkPieceColour(rowNew, colNew, colour, true, false);
-                    cout << pieceValidMove;
                     boardValidMove = checkBoardValidMove(rowCurr, colCurr, rowNew, colNew, dRow, dCol, colour, false);
-                    cout << boardValidMove << " ";
                 }
 
                 if (pieceValidMove == true && pieceBelongsToPlayer == false && boardValidMove == true) {
                     pieceCanMove = true;
-                    //return pieceCanMove;
+                    return pieceCanMove;
                 }
             }
-            cout << "\n";
         }
 
         if (pieceCanMove == false) {
