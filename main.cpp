@@ -509,7 +509,6 @@ public:
                 dCol = colNew - colCurr;
 
                 if (dRow == 0 && dCol == 0) {
-                    cout << "    ";
                     continue;
                 } else {
                     pieceValidMove = board[rowCurr][colCurr]->validPieceMove(dRow, dCol, false);
