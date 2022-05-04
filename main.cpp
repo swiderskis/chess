@@ -28,7 +28,7 @@ public:
     virtual char getName() = 0;
 
     // Check if input move is possible for piece
-    virtual bool validPieceMove(int dRow, int dCol) = 0;
+    virtual bool validPieceMove(int dRow, int dCol, bool playerMove) = 0;
 };
 
 class PieceKing : public Piece {
@@ -48,7 +48,7 @@ public:
         }
     }
 
-    bool validPieceMove(int dRow, int dCol) {
+    bool validPieceMove(int dRow, int dCol, bool playerMove) {
         if (abs(dRow) > 1 || abs(dCol) > 1) {
             return false;
         } else {
@@ -74,7 +74,7 @@ public:
         }
     }
 
-    bool validPieceMove(int dRow, int dCol) {
+    bool validPieceMove(int dRow, int dCol, bool playerMove) {
         if (dRow == 0 || dCol == 0) {
             return true;
         } else if (abs(dRow) - abs(dCol) != 0) {
@@ -102,7 +102,7 @@ public:
         }
     }
 
-    bool validPieceMove(int dRow, int dCol) {
+    bool validPieceMove(int dRow, int dCol, bool playerMove) {
         if (dRow == 0 || dCol == 0) {
             return false;
         } else if (abs(dRow) - abs(dCol) != 0) {
@@ -130,7 +130,7 @@ public:
         }
     }
 
-    bool validPieceMove(int dRow, int dCol) {
+    bool validPieceMove(int dRow, int dCol, bool playerMove) {
         if ((abs(dRow) == 2 && abs(dCol) == 1) || (abs(dRow) == 1 && abs(dCol) == 2)) {
             return true;
         } else {
@@ -156,7 +156,7 @@ public:
         }
     }
 
-    bool validPieceMove(int dRow, int dCol) {
+    bool validPieceMove(int dRow, int dCol, bool playerMove) {
         if (dRow != 0 && dCol != 0) {
             return false;
         } else {
@@ -185,14 +185,20 @@ public:
         }
     }
 
-    bool validPieceMove(int dRow, int dCol) {
+    bool validPieceMove(int dRow, int dCol, bool playerMove) {
         if (dRow == 0) {
             return false;
         } else if (dRow == direction*2 && dCol == 0 && hasMoved == false) {
-            hasMoved = true;
+            if (playerMove == true) {
+                hasMoved = true;
+            }
+
             return true;
         } else if (dRow == direction && abs(dCol) < 2) {
-            hasMoved = true;
+            if (playerMove == true) {
+                hasMoved = true;
+            }
+
             return true;
         } else {
             return false;
@@ -344,15 +350,51 @@ public:
                     cout << "|";
                 }
             }
+
             cout << "\n---   +---+---+---+---+---+---+---+---+\n";
         }
+
         cout << "                                       \n";
         cout << "      | A | B | C | D | E | F | G | H |\n";
     }
 
+    // Runs the full game until checkmate is reached
+    void game() {
+        bool checkmateWhite = false, checkmateBlack = false, checkWhite = false, checkBlack = false;
+        char turn = 'W';
+
+        string winWhite = "White wins!\n";
+        string winBlack = "Black wins!\n";
+
+        while (checkmateWhite == false || checkmateBlack == false) {
+
+            movePiece(turn);
+
+            switch (turn) {
+            case 'W':
+                turn = 'B';
+                checkBlack = isKingInCheck(turn);
+                break;
+            case 'B':
+                turn = 'W';
+                checkWhite = isKingInCheck(turn);
+                break;
+            }
+        }
+
+        if (checkmateBlack == true) {
+            cout << winWhite;
+        }
+
+        if (checkmateWhite == true) {
+            cout << winBlack;
+        }
+
+    }
+
     // Prompts player to move a piece, and checks to ensure the move is valid
     void movePiece(char colour) {
-        bool validCol = false, validRow = false, pieceCanMove = false, pieceBelongsToPlayer = false, pieceValidMove = false, pieceObstructed = true;
+        bool validCol = false, validRow = false, pieceCanMove = false, pieceBelongsToPlayer = false, pieceValidMove = false, boardValidMove = true;
 
         char colCurrStr, colNewStr;
 
@@ -379,6 +421,7 @@ public:
             cin >> colCurrStr >> rowCurr;
 
             validCol = menu.validUserInput(colCurrStr, validInput);
+
             if (validCol == true) {
                 colCurr = menu.charToIntInput(colCurrStr);
             } else {
@@ -386,15 +429,19 @@ public:
             }
 
             validRow = menu.validUserInput(rowCurr, minRow, maxRow);
+
             if (validRow == true) {
                 rowCurr--;
             } else {
                 continue;
             }
 
-            if (validCol == true && validRow == true) {
+            pieceBelongsToPlayer = checkPieceColour(rowCurr, colCurr, colour, false, true);
+
+            if (pieceBelongsToPlayer == true) {
                 pieceCanMove = checkPieceCanMove(rowCurr, colCurr, colour);
-                pieceBelongsToPlayer = checkPieceColour(rowCurr, colCurr, colour, false, true);
+            } else {
+                continue;
             }
         }
 
@@ -404,7 +451,7 @@ public:
         cout << inputTextNewPos;
 
         // Checks if input is in bounds of board, and if piece can move to location
-        while (validCol == false || validRow == false || pieceBelongsToPlayer == true || pieceValidMove == false || pieceObstructed == true) {
+        while (validCol == false || validRow == false || pieceBelongsToPlayer == true || pieceValidMove == false || boardValidMove == false) {
             cin >> colNewStr >> rowNew;
 
             validCol = menu.validUserInput(colNewStr, validInput);
@@ -427,33 +474,23 @@ public:
                 dRow = rowNew - rowCurr;
                 dCol = colNew - colCurr;
 
-                pieceValidMove = board[rowCurr][colCurr]->validPieceMove(dRow, dCol);
+
 
                 // Check piece is moving to different spot
                 // Put into if else statement so error does not double print
                 if (dRow == 0 && dCol == 0) {
                     pieceValidMove = false;
                 } else {
-                    pieceBelongsToPlayer = checkPieceColour(rowNew, colNew, colour, true, true);
-                }
-
-                // Special move checks for pawns
-                if (board[rowCurr][colCurr]->getName() == 'P' || board[rowCurr][colCurr]->getName() == 'p') {
-                    if ((dCol == 0 && board[rowNew][colNew] != 0) || (dCol != 0 && board[rowNew][colNew] == 0)) {
-                        pieceValidMove = false;
-                    }
-                }
-
-                // Check to ensure piece is not blocked from moving to desired location (except for knights)
-                if (board[rowCurr][colCurr]->getName() != 'N' && board[rowCurr][colCurr]->getName() != 'n' && pieceValidMove == true) {
-                    pieceObstructed = checkPieceObstructed(rowCurr, colCurr, dRow, dCol, true);
-                } else {
-                    pieceObstructed = false;
+                    pieceValidMove = board[rowCurr][colCurr]->validPieceMove(dRow, dCol, true);
                 }
 
                 if (pieceValidMove == false) {
                     cout << errorInvalidMove;
+                    continue;
                 }
+
+                pieceBelongsToPlayer = checkPieceColour(rowNew, colNew, colour, true, true);
+                boardValidMove = checkBoardValidMove(rowCurr, colCurr, rowNew, colNew, dRow, dCol, colour, true);
             }
         }
 
@@ -461,42 +498,10 @@ public:
         board[rowCurr][colCurr] = 0;
     }
 
-    // Runs the full game until checkmate is reached
-    void game() {
-        bool checkmateWhite = false, checkmateBlack = false, checkWhite = false, checkBlack = false;
-        char turn = 'W';
-
-        string winWhite = "White wins!\n";
-        string winBlack = "Black wins!\n";
-
-        while (checkmateWhite == false || checkmateBlack == false) {
-
-            movePiece(turn);
-
-            switch (turn) {
-            case 'W':
-                turn = 'B';
-                break;
-            case 'B':
-                turn = 'W';
-                break;
-            }
-        }
-
-        if (checkmateBlack == true) {
-            cout << winWhite;
-        }
-
-        if (checkmateWhite == true) {
-            cout << winBlack;
-        }
-
-    }
-
     // Checks if piece selected can make a legal move
     bool checkPieceCanMove(int rowCurr, int colCurr, char colour) {
         int dRow, dCol;
-        bool pieceCanMove = false, pieceValidMove = true, pieceBelongsToPlayer = true, pieceObstructed = false;
+        bool pieceCanMove = false, pieceValidMove = false, pieceBelongsToPlayer = true, boardValidMove = false;
 
         for (int rowNew = 0; rowNew < 8; rowNew++) {
             for (int colNew = 0; colNew < 8; colNew++) {
@@ -504,31 +509,23 @@ public:
                 dCol = colNew - colCurr;
 
                 if (dRow == 0 && dCol == 0) {
+                    cout << "    ";
                     continue;
                 } else {
-                    pieceValidMove = board[rowCurr][colCurr]->validPieceMove(dRow, dCol);
+                    pieceValidMove = board[rowCurr][colCurr]->validPieceMove(dRow, dCol, false);
+                    cout << pieceValidMove;
                     pieceBelongsToPlayer = checkPieceColour(rowNew, colNew, colour, true, false);
-
-                    // Special move checks for pawns
-                    if (board[rowCurr][colCurr]->getName() == 'P' || board[rowCurr][colCurr]->getName() == 'p') {
-                        if ((dCol == 0 && board[rowNew][colNew] != 0) || (dCol != 0 && board[rowNew][colNew] == 0)) {
-                            pieceValidMove = false;
-                        }
-                    }
-
-                    // Check to ensure piece is not blocked from moving to desired location (except for knights)
-                    if (board[rowCurr][colCurr]->getName() != 'N' && board[rowCurr][colCurr]->getName() != 'n' && pieceValidMove == true) {
-                        pieceObstructed = checkPieceObstructed(rowCurr, colCurr, dRow, dCol, false);
-                    } else {
-                        pieceObstructed = false;
-                    }
+                    cout << pieceValidMove;
+                    boardValidMove = checkBoardValidMove(rowCurr, colCurr, rowNew, colNew, dRow, dCol, colour, false);
+                    cout << boardValidMove << " ";
                 }
 
-                if (pieceValidMove == true && pieceBelongsToPlayer == false && pieceObstructed == false) {
+                if (pieceValidMove == true && pieceBelongsToPlayer == false && boardValidMove == true) {
                     pieceCanMove = true;
-                    return pieceCanMove;
+                    //return pieceCanMove;
                 }
             }
+            cout << "\n";
         }
 
         if (pieceCanMove == false) {
@@ -561,33 +558,75 @@ public:
         }
     }
 
-    // Checks piece is not blocked from moving to desired location
-    bool checkPieceObstructed(int rowCurr, int colCurr, int dRow, int dCol, bool printError) {
-        bool pieceObstructed = false;
+    // Checks if move is valid in context of board
+    bool checkBoardValidMove(int rowCurr, int colCurr, int rowNew, int colNew, int dRow, int dCol, char colour, bool printError) {
+        bool pawnMoveCheck = false, pieceObstructed = false, boardValidMove = false;
 
-        while (abs(dRow) > 1 || abs(dCol) > 1) {
-            if (dRow > 0) {
-                dRow--;
-            } else if (dRow < 0) {
-                dRow++;
+        // Special move checks for pawns
+        if (board[rowCurr][colCurr]->getName() == 'P' || board[rowCurr][colCurr]->getName() == 'p') {
+            if ((dCol == 0 && board[rowNew][colNew] != 0) || (dCol != 0 && board[rowNew][colNew] == 0)) {
+                pawnMoveCheck = false;
+            } else {
+                pawnMoveCheck = true;
             }
-
-            if (dCol > 0) {
-                dCol--;
-            } else if (dCol < 0) {
-                dCol++;
-            }
-
-            if (board[rowCurr + dRow][colCurr + dCol] != 0) {
-                pieceObstructed = true;
-                if (printError == true) {
-                    cout << errorObstructed;
-                }
-                break;
-            }
+        } else {
+            pawnMoveCheck = true;
         }
 
-        return pieceObstructed;
+        // Check to ensure piece is not blocked from moving to desired location (except for knights)
+        if (board[rowCurr][colCurr]->getName() != 'N' && board[rowCurr][colCurr]->getName() != 'n') {
+            while (abs(dRow) > 1 || abs(dCol) > 1) {
+                if (dRow > 0) {
+                    dRow--;
+                } else if (dRow < 0) {
+                    dRow++;
+                }
+
+                if (dCol > 0) {
+                    dCol--;
+                } else if (dCol < 0) {
+                    dCol++;
+                }
+
+                if (board[rowCurr + dRow][colCurr + dCol] != 0) {
+                    pieceObstructed = true;
+                    if (printError == true) {
+                        cout << errorObstructed;
+                    }
+                    break;
+                }
+            }
+        } else {
+            pieceObstructed = false;
+        }
+
+        if (pawnMoveCheck == true && pieceObstructed == false) {
+            boardValidMove = true;
+        }
+
+        return boardValidMove;
+    }
+
+    // Checks if king is in check after player's move
+    bool isKingInCheck(char colour) {
+        /*
+        int kingRow, kingCol;
+
+        // Identify king position
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                if ((board[r][c]->getName() == 'K' || board[r][c]->getName() == 'k') && board[r][c]->getColour() == colour) {
+                    kingRow = r;
+                    kingCol = c;
+
+                    // Breaks double loop
+                    r = 7;
+                    c = 7;
+                }
+            }
+        }
+        */
+        return false;
     }
 };
 
