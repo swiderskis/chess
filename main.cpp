@@ -167,11 +167,11 @@ public:
 
 class PiecePawn : public Piece {
 private:
-    bool hasMoved;
+    bool hasMoved = false;
     int direction;
 public:
     // Constructor
-    PiecePawn(char colour) : Piece(colour), hasMoved(false), direction(setDirection()) {}
+    PiecePawn(char colour) : Piece(colour), direction(setDirection()) {}
 
     // Methods
     char getName() {
@@ -274,6 +274,8 @@ private:
 
     Menu menu;
 
+    bool checkmateWhite = false, checkmateBlack = false, checkWhite = false, checkBlack = false;
+
     string inputTextWhite = "\nWhite, ";
     string inputTextBlack = "\nBlack, ";
     string inputTextCurrPos = "input the position of the piece you would like to move:\n";
@@ -286,7 +288,6 @@ private:
     string errorCheckPieceColourEmpty = "ERROR: There is no piece in this square!\n";
     string errorInvalidMove = "ERROR: Invalid move!\n";
     string errorObstructed = "ERROR: Piece is blocked from moving to this space!\n";
-
 public:
     // Constructor
     Game() {
@@ -360,7 +361,6 @@ public:
 
     // Runs the full game until checkmate is reached
     void game() {
-        bool checkmateWhite = false, checkmateBlack = false, checkWhite = false, checkBlack = false;
         char turn = 'W';
 
         string winWhite = "White wins!\n";
@@ -401,7 +401,7 @@ public:
         int rowCurr, colCurr, rowNew, colNew;
         int dRow, dCol;
 
-        const int minRow = 1, maxRow = 8;
+        const int MIN_ROW = 1, MAX_ROW = 8;
 
         printBoard();
 
@@ -428,7 +428,7 @@ public:
                 continue;
             }
 
-            validRow = menu.validUserInput(rowCurr, minRow, maxRow);
+            validRow = menu.validUserInput(rowCurr, MIN_ROW, MAX_ROW);
 
             if (validRow == true) {
                 rowCurr--;
@@ -462,7 +462,7 @@ public:
                 continue;
             }
 
-            validRow = menu.validUserInput(rowNew, minRow, maxRow);
+            validRow = menu.validUserInput(rowNew, MIN_ROW, MAX_ROW);
 
             if (validRow == true) {
                 rowNew--;
