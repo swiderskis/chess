@@ -219,15 +219,14 @@ public:
 };
 
 class Menu {
-private:
-    string invalidCharInput = "ERROR: Invalid column input!\n";
-    string invalidIntInput = "ERROR: Invalid row input!\n";
 public:
     // Methods
 
     // Checks if char input is valid
     // Taken from https://www.codegrepper.com/code-examples/cpp/check+if+char+in+string+c%2B%2B
     bool validUserInput(char input, string validInput) {
+        string invalidCharInput = "ERROR: Invalid column input!\n";
+
         if (validInput.find(input) != std::string::npos) {
             return true;
         } else {
@@ -238,6 +237,8 @@ public:
 
     // Checks if int input is valid
     bool validUserInput(int input, int minValidInput, int maxValidInput) {
+        string invalidIntInput = "ERROR: Invalid row input!\n";
+
         if (input < minValidInput || input > maxValidInput) {
             cout << invalidIntInput;
             return false;
@@ -276,18 +277,6 @@ private:
 
     bool checkmateWhite = false, checkmateBlack = false, checkWhite = false, checkBlack = false;
 
-    string inputTextWhite = "\nWhite, ";
-    string inputTextBlack = "\nBlack, ";
-    string inputTextCurrPos = "input the position of the piece you would like to move:\n";
-    string inputTextNewPos = "\nInput the position you would like to move this piece to:\n";
-    string validInput = "ABCDEFGH";
-
-    string errorCheckPieceCanMove = "ERROR: This piece cannot make a legal move!\n";
-    string errorCheckPieceOppColour = "ERROR: This piece does not belong to you!\n";
-    string errorCheckPiecePlayerColour = "ERROR: This position contains one of your pieces!\n";
-    string errorCheckPieceColourEmpty = "ERROR: There is no piece in this square!\n";
-    string errorInvalidMove = "ERROR: Invalid move!\n";
-    string errorObstructed = "ERROR: Piece is blocked from moving to this space!\n";
 public:
     // Constructor
     Game() {
@@ -403,6 +392,13 @@ public:
 
         const int MIN_ROW = 1, MAX_ROW = 8;
 
+        string inputTextWhite = "\nWhite, ";
+        string inputTextBlack = "\nBlack, ";
+        string inputTextCurrPos = "input the position of the piece you would like to move:\n";
+        string inputTextNewPos = "\nInput the position you would like to move this piece to:\n";
+        string validInput = "ABCDEFGH";
+        string errorInvalidMove = "ERROR: Invalid move!\n";
+
         printBoard();
 
         switch (colour) {
@@ -490,7 +486,7 @@ public:
                 }
 
                 pieceBelongsToPlayer = checkPieceColour(rowNew, colNew, colour, true, true);
-                boardValidMove = checkBoardValidMove(rowCurr, colCurr, rowNew, colNew, dRow, dCol, colour, true);
+                boardValidMove = checkBoardValidMove(rowCurr, colCurr, rowNew, colNew, dRow, dCol, true);
             }
         }
 
@@ -503,6 +499,8 @@ public:
         int dRow, dCol;
         bool pieceCanMove = false, pieceValidMove = false, pieceBelongsToPlayer = true, boardValidMove = false;
 
+        string errorCheckPieceCanMove = "ERROR: This piece cannot make a legal move!\n";
+
         for (int rowNew = 0; rowNew < 8; rowNew++) {
             for (int colNew = 0; colNew < 8; colNew++) {
                 dRow = rowNew - rowCurr;
@@ -513,7 +511,7 @@ public:
                 } else {
                     pieceValidMove = board[rowCurr][colCurr]->validPieceMove(dRow, dCol, false);
                     pieceBelongsToPlayer = checkPieceColour(rowNew, colNew, colour, true, false);
-                    boardValidMove = checkBoardValidMove(rowCurr, colCurr, rowNew, colNew, dRow, dCol, colour, false);
+                    boardValidMove = checkBoardValidMove(rowCurr, colCurr, rowNew, colNew, dRow, dCol, false);
                 }
 
                 if (pieceValidMove == true && pieceBelongsToPlayer == false && boardValidMove == true) {
@@ -533,6 +531,10 @@ public:
     // Checks if piece selected belongs to player
     // errorWhen bool used to determine what type of inputs are invalid
     bool checkPieceColour(int r, int c, char colour, bool errorWhen, bool printError) {
+        string errorCheckPieceOppColour = "ERROR: This piece does not belong to you!\n";
+        string errorCheckPiecePlayerColour = "ERROR: This position contains one of your pieces!\n";
+        string errorCheckPieceColourEmpty = "ERROR: There is no piece in this square!\n";
+
         if (board[r][c] == 0) {
             if (errorWhen == false && printError == true) {
                 cout << errorCheckPieceColourEmpty;
@@ -554,8 +556,10 @@ public:
     }
 
     // Checks if move is valid in context of board
-    bool checkBoardValidMove(int rowCurr, int colCurr, int rowNew, int colNew, int dRow, int dCol, char colour, bool printError) {
+    bool checkBoardValidMove(int rowCurr, int colCurr, int rowNew, int colNew, int dRow, int dCol, bool printError) {
         bool pawnMoveCheck = false, pieceObstructed = false, boardValidMove = false;
+
+        string errorObstructed = "ERROR: Piece is blocked from moving to this space!\n";
 
         // Special move checks for pawns
         if (board[rowCurr][colCurr]->getName() == 'P' || board[rowCurr][colCurr]->getName() == 'p') {
@@ -604,23 +608,40 @@ public:
 
     // Checks if king is in check after player's move
     bool isKingInCheck(char colour) {
-        /*
-        int kingRow, kingCol;
+        int kingRow, kingCol, dRow, dCol;
+
+        bool pieceValidMove, boardValidMove;
 
         // Identify king position
         for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
-                if ((board[r][c]->getName() == 'K' || board[r][c]->getName() == 'k') && board[r][c]->getColour() == colour) {
+                if (board[r][c] != 0 && (board[r][c]->getName() == 'K' || board[r][c]->getName() == 'k') && board[r][c]->getColour() == colour) {
                     kingRow = r;
                     kingCol = c;
 
-                    // Breaks double loop
+                    // Breaks loop
                     r = 7;
                     c = 7;
                 }
             }
         }
-        */
+
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                if (board[r][c] != 0 && board[r][c]->getColour() != colour) {
+                    dRow = kingRow - r;
+                    dCol = kingCol - c;
+
+                    pieceValidMove = board[r][c]->validPieceMove(dRow, dCol, false);
+                    boardValidMove = checkBoardValidMove(r, c, kingRow, kingCol, dRow, dCol, false);
+
+                    if (pieceValidMove == true && boardValidMove == true) {
+                        return true;
+                    }
+                }
+            }
+        }
+
         return false;
     }
 };
