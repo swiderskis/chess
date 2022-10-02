@@ -286,7 +286,7 @@ public:
                 board[r][c] = 0;
             }
         }
-
+        /*
         // Initialise white
         board[0][0] = new PieceRook('W');
         board[0][1] = new PieceBishop('W');
@@ -314,6 +314,11 @@ public:
         for (int c = 0; c < 8; c++) {
             board[6][c] = new PiecePawn('B');
         }
+        */
+        board[3][3] = new PieceKing('W');
+        board[5][5] = new PieceBishop('B');
+        board[4][4] = new PieceKnight('W');
+        board[0][0] = new PieceKing('B');
     }
 
     // Methods
@@ -352,8 +357,8 @@ public:
     void game() {
         char turn = 'W';
 
-        string winWhite = "White wins!\n";
-        string winBlack = "Black wins!\n";
+        string winWhite = "\nWhite wins!\n";
+        string winBlack = "\nBlack wins!\n";
 
         while (checkmateWhite == false || checkmateBlack == false) {
 
@@ -372,10 +377,12 @@ public:
         }
 
         if (checkmateBlack == true) {
+            printBoard();
             cout << winWhite;
         }
 
         if (checkmateWhite == true) {
+            printBoard();
             cout << winBlack;
         }
 
@@ -398,100 +405,128 @@ public:
         string inputTextNewPos = "\nInput the position you would like to move this piece to:\n";
         string validInput = "ABCDEFGH";
         string errorInvalidMove = "ERROR: Invalid move!\n";
+        string errorKingInCheck = "ERROR: Your king is in check!\n";
+        string whiteKingInCheck = "\nWhite's king is in check!\n";
+        string blackKingInCheck = "\nBlack's king is in check!\n";
 
         printBoard();
 
-        switch (colour) {
-        case 'W':
-            cout << inputTextWhite;
-            break;
-        case 'B':
-            cout << inputTextBlack;
-            break;
+        if (checkWhite == true) {
+            cout << whiteKingInCheck;
         }
 
-        cout << inputTextCurrPos;
-
-        // Checks if input is in bounds of board, if piece selected can move, and if piece belongs to player
-        while (validCol == false || validRow == false || pieceCanMove == false || pieceBelongsToPlayer == false) {
-            cin >> colCurrStr >> rowCurr;
-
-            validCol = menu.validUserInput(colCurrStr, validInput);
-
-            if (validCol == true) {
-                colCurr = menu.charToIntInput(colCurrStr);
-            } else {
-                continue;
-            }
-
-            validRow = menu.validUserInput(rowCurr, MIN_ROW, MAX_ROW);
-
-            if (validRow == true) {
-                rowCurr--;
-            } else {
-                continue;
-            }
-
-            pieceBelongsToPlayer = checkPieceColour(rowCurr, colCurr, colour, false, true);
-
-            if (pieceBelongsToPlayer == true) {
-                pieceCanMove = checkPieceCanMove(rowCurr, colCurr, colour);
-            } else {
-                continue;
-            }
+        if (checkBlack == true) {
+            cout << blackKingInCheck;
         }
 
-        validCol = false;
-        validRow = false;
-
-        cout << inputTextNewPos;
-
-        // Checks if input is in bounds of board, and if piece can move to location
-        while (validCol == false || validRow == false || pieceBelongsToPlayer == true || pieceValidMove == false || boardValidMove == false) {
-            cin >> colNewStr >> rowNew;
-
-            validCol = menu.validUserInput(colNewStr, validInput);
-
-            if (validCol == true) {
-                colNew = menu.charToIntInput(colNewStr);
-            } else {
-                continue;
+        do {
+            switch (colour) {
+            case 'W':
+                cout << inputTextWhite;
+                break;
+            case 'B':
+                cout << inputTextBlack;
+                break;
             }
 
-            validRow = menu.validUserInput(rowNew, MIN_ROW, MAX_ROW);
+            cout << inputTextCurrPos;
 
-            if (validRow == true) {
-                rowNew--;
-            } else {
-                continue;
-            }
+            // Checks if input is in bounds of board, if piece selected can move, and if piece belongs to player
+            while (validCol == false || validRow == false || pieceCanMove == false || pieceBelongsToPlayer == false) {
+                cin >> colCurrStr >> rowCurr;
 
-            if (validCol == true && validRow == true) {
-                dRow = rowNew - rowCurr;
-                dCol = colNew - colCurr;
+                validCol = menu.validUserInput(colCurrStr, validInput);
 
-
-
-                // Check piece is moving to different spot
-                // Put into if else statement so error does not double print
-                if (dRow == 0 && dCol == 0) {
-                    pieceValidMove = false;
+                if (validCol == true) {
+                    colCurr = menu.charToIntInput(colCurrStr);
                 } else {
-                    pieceValidMove = board[rowCurr][colCurr]->validPieceMove(dRow, dCol, true);
-                }
-
-                if (pieceValidMove == false) {
-                    cout << errorInvalidMove;
                     continue;
                 }
 
-                pieceBelongsToPlayer = checkPieceColour(rowNew, colNew, colour, true, true);
-                boardValidMove = checkBoardValidMove(rowCurr, colCurr, rowNew, colNew, dRow, dCol, true);
-            }
-        }
+                validRow = menu.validUserInput(rowCurr, MIN_ROW, MAX_ROW);
 
-        board[rowNew][colNew] = board[rowCurr][colCurr];
-        board[rowCurr][colCurr] = 0;
+                if (validRow == true) {
+                    rowCurr--;
+                } else {
+                    continue;
+                }
+
+                pieceBelongsToPlayer = checkPieceColour(rowCurr, colCurr, colour, false, true);
+
+                if (pieceBelongsToPlayer == true) {
+                    pieceCanMove = checkPieceCanMove(rowCurr, colCurr, colour);
+                } else {
+                    continue;
+                }
+            }
+
+            validCol = false;
+            validRow = false;
+
+            cout << inputTextNewPos;
+
+            // Checks if input is in bounds of board, and if piece can move to location
+            while (validCol == false || validRow == false || pieceBelongsToPlayer == true || pieceValidMove == false || boardValidMove == false) {
+                cin >> colNewStr >> rowNew;
+
+                validCol = menu.validUserInput(colNewStr, validInput);
+
+                if (validCol == true) {
+                    colNew = menu.charToIntInput(colNewStr);
+                } else {
+                    continue;
+                }
+
+                validRow = menu.validUserInput(rowNew, MIN_ROW, MAX_ROW);
+
+                if (validRow == true) {
+                    rowNew--;
+                } else {
+                    continue;
+                }
+
+                if (validCol == true && validRow == true) {
+                    dRow = rowNew - rowCurr;
+                    dCol = colNew - colCurr;
+
+                    // Check piece is moving to different spot
+                    // Put into if else statement so error does not double print
+                    if (dRow == 0 && dCol == 0) {
+                        pieceValidMove = false;
+                    } else {
+                        pieceValidMove = board[rowCurr][colCurr]->validPieceMove(dRow, dCol, true);
+                    }
+
+                    if (pieceValidMove == false) {
+                        cout << errorInvalidMove;
+                        continue;
+                    }
+
+                    pieceBelongsToPlayer = checkPieceColour(rowNew, colNew, colour, true, true);
+                    boardValidMove = checkBoardValidMove(rowCurr, colCurr, rowNew, colNew, dRow, dCol, true);
+                }
+            }
+
+            board[rowNew][colNew] = board[rowCurr][colCurr];
+            board[rowCurr][colCurr] = 0;
+
+            switch (colour) {
+            case 'W':
+                checkWhite = isKingInCheck(colour);
+                break;
+            case 'B':
+                checkBlack = isKingInCheck(colour);
+                break;
+            }
+
+            if ((checkWhite == true && colour == 'W') || (checkBlack == true && colour == 'B')) {
+                cout << errorKingInCheck;
+
+                board[rowCurr][colCurr] = board[rowNew][colNew];
+                board[rowNew][colNew] = 0;
+            }
+
+        } while ((checkWhite == true && colour == 'W') || (checkBlack == true && colour == 'B'));
     }
 
     // Checks if piece selected can make a legal move
@@ -606,7 +641,7 @@ public:
         return boardValidMove;
     }
 
-    // Checks if king is in check after player's move
+    // Checks if king is in check
     bool isKingInCheck(char colour) {
         int kingRow, kingCol, dRow, dCol;
 
