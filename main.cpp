@@ -1,7 +1,3 @@
-/*
-INSERT SUMMARY HERE
-*/
-
 #include <iostream>
 #include <string>
 #include <cmath>
@@ -286,7 +282,7 @@ public:
                 board[r][c] = 0;
             }
         }
-        /*
+
         // Initialise white
         board[0][0] = new PieceRook('W');
         board[0][1] = new PieceBishop('W');
@@ -314,11 +310,6 @@ public:
         for (int c = 0; c < 8; c++) {
             board[6][c] = new PiecePawn('B');
         }
-        */
-        board[3][3] = new PieceKing('W');
-        board[5][5] = new PieceBishop('B');
-        board[4][4] = new PieceKnight('W');
-        board[0][0] = new PieceKing('B');
     }
 
     // Methods
