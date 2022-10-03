@@ -68,12 +68,16 @@ void Game::printBoard() {
 }
 
 void Game::game() {
+    bool notCheckmate = true, checkmateWhite = false, checkmateBlack = false;
+
     char turn = 'W';
+
+    int dRow, dCol;
 
     string winWhite = "\nWhite wins!\n";
     string winBlack = "\nBlack wins!\n";
 
-    while (checkmateWhite == false || checkmateBlack == false) {
+    while (checkmateWhite == false && checkmateBlack == false) {
 
         // Takes copy of board, used for possible move checks
         for (int r = 0; r < 8; r++) {
@@ -93,6 +97,36 @@ void Game::game() {
             turn = 'W';
             checkWhite = isKingInCheck(turn);
             break;
+        }
+
+        // Checks if the player's king is in checkmate
+        if (checkBlack == true || checkWhite == true) {
+            notCheckmate = false;
+
+            for (int r = 0; r < 8; r++) {
+                for (int c = 0; c < 8; c++) {
+                    if (board[r][c] != 0 && board[r][c]->getColour() == turn) {
+                        notCheckmate = canPieceStopCheck(turn, r, c, false);
+                    }
+
+                    // Breaks loops
+                    if (notCheckmate == true) {
+                        r = 7;
+                        c = 7;
+                    }
+                }
+            }
+
+            if (notCheckmate == false) {
+                switch (turn) {
+                case 'W':
+                    checkmateWhite = true;
+                    break;
+                case 'B':
+                    checkmateBlack = true;
+                    break;
+                }
+            }
         }
     }
 
@@ -124,7 +158,7 @@ void Game::movePiece(char colour) {
     string inputTextNewPos = "\nInput the position you would like to move this piece to:\n";
     string validInput = "ABCDEFGH";
     string errorInvalidMove = "ERROR: Invalid move!\n";
-    string errorKingInCheck = "ERROR: Your king is in check!\n";
+    string errorKingInCheck = "ERROR: Your king is still in check!\n";
     string whiteKingInCheck = "\nWhite's king is in check!\n";
     string blackKingInCheck = "\nBlack's king is in check!\n";
 
@@ -174,7 +208,7 @@ void Game::movePiece(char colour) {
 
         if (pieceBelongsToPlayer == true) {
             pieceCanMove = checkPieceCanMove(rowCurr, colCurr, colour);
-            pieceCanStopCheck = canPieceStopCheck(colour, rowCurr, colCurr);
+            pieceCanStopCheck = canPieceStopCheck(colour, rowCurr, colCurr, true);
         } else {
             continue;
         }
@@ -404,7 +438,7 @@ void Game::revertBoard(int rowCurr, int colCurr, int rowNew, int colNew) {
     board[rowNew][colNew] = boardCopy[rowNew][colNew];
 }
 
-bool Game::canPieceStopCheck(char colour, int rowCurr, int colCurr) {
+bool Game::canPieceStopCheck(char colour, int rowCurr, int colCurr, bool printError) {
     bool kingInCheck = true, pieceCanStopCheck = false, pieceValidMove = false, boardValidMove = false;
     int dRow, dCol;
 
@@ -417,14 +451,17 @@ bool Game::canPieceStopCheck(char colour, int rowCurr, int colCurr) {
             dCol = c - colCurr;
 
             pieceValidMove = board[rowCurr][colCurr]->validPieceMove(dRow, dCol, false);
-            boardValidMove = checkBoardValidMove(rowCurr, colCurr, r, c, dRow, dCol, false);
+            if (dRow != 0 && dCol != 0) {
+                boardValidMove = checkBoardValidMove(rowCurr, colCurr, r, c, dRow, dCol, false);
+            } else {
+                boardValidMove = false;
+            }
 
             if (pieceValidMove == true && boardValidMove == true) {
                 board[r][c] = board[rowCurr][colCurr];
                 board[rowCurr][colCurr] = 0;
 
                 kingInCheck = isKingInCheck(colour);
-
                 revertBoard(rowCurr, colCurr, r, c);
 
                 if (kingInCheck == false) {
@@ -434,7 +471,9 @@ bool Game::canPieceStopCheck(char colour, int rowCurr, int colCurr) {
         }
     }
 
-    cout << errorPieceCannotStopCheck;
+    if (printError == true) {
+        cout << errorPieceCannotStopCheck;
+    }
 
     return false;
 }

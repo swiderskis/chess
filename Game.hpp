@@ -19,7 +19,7 @@ private:
 
     Menu menu;
 
-    bool checkmateWhite = false, checkmateBlack = false, checkWhite = false, checkBlack = false;
+    bool checkWhite = false, checkBlack = false;
 
 public:
     // Constructor
@@ -53,7 +53,7 @@ public:
     void revertBoard(int rowCurr, int colCurr, int rowNew, int colNew);
 
     // Checks if selected piece can stop check
-    bool canPieceStopCheck(char colour, int rowCurr, int colCurr);
+    bool canPieceStopCheck(char colour, int rowCurr, int colCurr, bool printError);
 };
 
 #endif
