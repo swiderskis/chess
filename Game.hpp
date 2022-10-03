@@ -54,6 +54,9 @@ public:
 
     // Checks if selected piece can stop check
     bool canPieceStopCheck(char colour, int rowCurr, int colCurr, bool printError);
+
+    // Takes copy of board, used for possible move checks
+    void copyBoard();
 };
 
 #endif

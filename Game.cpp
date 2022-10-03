@@ -77,16 +77,12 @@ void Game::game() {
     string winWhite = "\nWhite wins!\n";
     string winBlack = "\nBlack wins!\n";
 
+    // Takes copy of board, used for possible move checks
+    copyBoard();
+
     while (checkmateWhite == false && checkmateBlack == false) {
-
-        // Takes copy of board, used for possible move checks
-        for (int r = 0; r < 8; r++) {
-            for (int c = 0; c < 8; c++) {
-                boardCopy[r][c] = board[r][c];
-            }
-        }
-
         movePiece(turn);
+        copyBoard();
 
         switch (turn) {
         case 'W':
@@ -158,7 +154,7 @@ void Game::movePiece(char colour) {
     string inputTextNewPos = "\nInput the position you would like to move this piece to:\n";
     string validInput = "ABCDEFGH";
     string errorInvalidMove = "ERROR: Invalid move!\n";
-    string errorKingInCheck = "ERROR: Your king is still in check!\n";
+    string errorKingInCheck = "ERROR: Your king is in check!\n";
     string whiteKingInCheck = "\nWhite's king is in check!\n";
     string blackKingInCheck = "\nBlack's king is in check!\n";
 
@@ -208,7 +204,11 @@ void Game::movePiece(char colour) {
 
         if (pieceBelongsToPlayer == true) {
             pieceCanMove = checkPieceCanMove(rowCurr, colCurr, colour);
-            pieceCanStopCheck = canPieceStopCheck(colour, rowCurr, colCurr, true);
+            if ((colour == 'W' && checkWhite == true) || (colour == 'B' && checkBlack == true)) {
+                pieceCanStopCheck = canPieceStopCheck(colour, rowCurr, colCurr, true);
+            } else {
+                pieceCanStopCheck = true;
+            }
         } else {
             continue;
         }
@@ -278,11 +278,18 @@ void Game::movePiece(char colour) {
             cout << errorKingInCheck;
 
             kingOutOfCheck = false;
-
             revertBoard(rowCurr, colCurr, rowNew, colNew);
         } else {
             kingOutOfCheck = true;
         }
+    }
+
+    if (rowNew == 0 && board[rowNew][colNew]->getColour() == 'B' && board[rowNew][colNew]->getName() == 'p') {
+        board[rowNew][colNew] = new PieceQueen('B');
+    }
+
+    if (rowNew == 7 && board[rowNew][colNew]->getColour() == 'W' && board[rowNew][colNew]->getName() == 'P') {
+        board[rowNew][colNew] = new PieceQueen('W');
     }
 }
 
@@ -451,7 +458,7 @@ bool Game::canPieceStopCheck(char colour, int rowCurr, int colCurr, bool printEr
             dCol = c - colCurr;
 
             pieceValidMove = board[rowCurr][colCurr]->validPieceMove(dRow, dCol, false);
-            if (dRow != 0 && dCol != 0) {
+            if (dRow != 0 || dCol != 0) {
                 boardValidMove = checkBoardValidMove(rowCurr, colCurr, r, c, dRow, dCol, false);
             } else {
                 boardValidMove = false;
@@ -476,4 +483,12 @@ bool Game::canPieceStopCheck(char colour, int rowCurr, int colCurr, bool printEr
     }
 
     return false;
+}
+
+void Game::copyBoard() {
+   for (int r = 0; r < 8; r++) {
+        for (int c = 0; c < 8; c++) {
+            boardCopy[r][c] = board[r][c];
+        }
+    }
 }
