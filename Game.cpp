@@ -387,5 +387,3 @@ bool Game::isKingInCheck(char colour) {
 
     return false;
 }
-
-
