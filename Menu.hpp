@@ -2,7 +2,6 @@
 #define MENU_HPP
 
 #include <iostream>
-#include <string>
 #include <stdlib.h>
 
 using namespace std;
