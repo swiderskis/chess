@@ -76,6 +76,13 @@ void Game::game() {
 
     while (checkmateWhite == false || checkmateBlack == false) {
 
+        // Takes copy of board, used for possible move checks
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                boardCopy[r][c] = board[r][c];
+            }
+        }
+
         movePiece(turn);
 
         switch (turn) {
@@ -103,7 +110,7 @@ void Game::game() {
 }
 
 void Game::movePiece(char colour) {
-    bool validCol = false, validRow = false, pieceCanMove = false, pieceBelongsToPlayer = false, pieceValidMove = false, boardValidMove = true;
+    bool validCol = false, validRow = false, pieceCanMove = false, pieceBelongsToPlayer = false, pieceValidMove = false, boardValidMove = true, pieceCanStopCheck = false, kingOutOfCheck = false;
 
     char colCurrStr, colNewStr;
 
@@ -132,92 +139,94 @@ void Game::movePiece(char colour) {
         cout << blackKingInCheck;
     }
 
-    do {
-        switch (colour) {
-        case 'W':
-            cout << inputTextWhite;
-            break;
-        case 'B':
-            cout << inputTextBlack;
-            break;
+    switch (colour) {
+    case 'W':
+        cout << inputTextWhite;
+        break;
+    case 'B':
+        cout << inputTextBlack;
+        break;
+    }
+
+    // SELECT CURRENT PIECE
+    cout << inputTextCurrPos;
+
+    // Checks if input is in bounds of board, if piece selected can move, and if piece belongs to player
+    while (validCol == false || validRow == false || pieceCanMove == false || pieceBelongsToPlayer == false || pieceCanStopCheck == false) {
+        cin >> colCurrStr >> rowCurr;
+
+        validCol = menu.validUserInput(colCurrStr, validInput);
+
+        if (validCol == true) {
+            colCurr = menu.charToIntInput(colCurrStr);
+        } else {
+            continue;
         }
 
-        cout << inputTextCurrPos;
+        validRow = menu.validUserInput(rowCurr, MIN_ROW, MAX_ROW);
 
-        // Checks if input is in bounds of board, if piece selected can move, and if piece belongs to player
-        while (validCol == false || validRow == false || pieceCanMove == false || pieceBelongsToPlayer == false) {
-            cin >> colCurrStr >> rowCurr;
-
-            validCol = menu.validUserInput(colCurrStr, validInput);
-
-            if (validCol == true) {
-                colCurr = menu.charToIntInput(colCurrStr);
-            } else {
-                continue;
-            }
-
-            validRow = menu.validUserInput(rowCurr, MIN_ROW, MAX_ROW);
-
-            if (validRow == true) {
-                rowCurr--;
-            } else {
-                continue;
-            }
-
-            pieceBelongsToPlayer = checkPieceColour(rowCurr, colCurr, colour, false, true);
-
-            if (pieceBelongsToPlayer == true) {
-                pieceCanMove = checkPieceCanMove(rowCurr, colCurr, colour);
-            } else {
-                continue;
-            }
+        if (validRow == true) {
+            rowCurr--;
+        } else {
+            continue;
         }
 
-        validCol = false;
-        validRow = false;
+        pieceBelongsToPlayer = checkPieceColour(rowCurr, colCurr, colour, false, true);
 
-        cout << inputTextNewPos;
+        if (pieceBelongsToPlayer == true) {
+            pieceCanMove = checkPieceCanMove(rowCurr, colCurr, colour);
+            pieceCanStopCheck = canPieceStopCheck(colour, rowCurr, colCurr);
+        } else {
+            continue;
+        }
 
-        // Checks if input is in bounds of board, and if piece can move to location
-        while (validCol == false || validRow == false || pieceBelongsToPlayer == true || pieceValidMove == false || boardValidMove == false) {
-            cin >> colNewStr >> rowNew;
+    }
 
-            validCol = menu.validUserInput(colNewStr, validInput);
+    validCol = false;
+    validRow = false;
 
-            if (validCol == true) {
-                colNew = menu.charToIntInput(colNewStr);
+    // CHOOSE NEW POSITION
+    cout << inputTextNewPos;
+
+    // Checks if input is in bounds of board, and if piece can move to location
+    while (validCol == false || validRow == false || pieceBelongsToPlayer == true || pieceValidMove == false || boardValidMove == false || kingOutOfCheck == false) {
+        cin >> colNewStr >> rowNew;
+
+        validCol = menu.validUserInput(colNewStr, validInput);
+
+        if (validCol == true) {
+            colNew = menu.charToIntInput(colNewStr);
+        } else {
+            continue;
+        }
+
+        validRow = menu.validUserInput(rowNew, MIN_ROW, MAX_ROW);
+
+        if (validRow == true) {
+            rowNew--;
+        } else {
+            continue;
+        }
+
+        if (validCol == true && validRow == true) {
+            dRow = rowNew - rowCurr;
+            dCol = colNew - colCurr;
+
+            // Check piece is moving to different spot
+            // Put into if else statement so error does not double print
+            if (dRow == 0 && dCol == 0) {
+                pieceValidMove = false;
             } else {
+                pieceValidMove = board[rowCurr][colCurr]->validPieceMove(dRow, dCol, true);
+            }
+
+            if (pieceValidMove == false) {
+                cout << errorInvalidMove;
                 continue;
             }
 
-            validRow = menu.validUserInput(rowNew, MIN_ROW, MAX_ROW);
-
-            if (validRow == true) {
-                rowNew--;
-            } else {
-                continue;
-            }
-
-            if (validCol == true && validRow == true) {
-                dRow = rowNew - rowCurr;
-                dCol = colNew - colCurr;
-
-                // Check piece is moving to different spot
-                // Put into if else statement so error does not double print
-                if (dRow == 0 && dCol == 0) {
-                    pieceValidMove = false;
-                } else {
-                    pieceValidMove = board[rowCurr][colCurr]->validPieceMove(dRow, dCol, true);
-                }
-
-                if (pieceValidMove == false) {
-                    cout << errorInvalidMove;
-                    continue;
-                }
-
-                pieceBelongsToPlayer = checkPieceColour(rowNew, colNew, colour, true, true);
-                boardValidMove = checkBoardValidMove(rowCurr, colCurr, rowNew, colNew, dRow, dCol, true);
-            }
+            pieceBelongsToPlayer = checkPieceColour(rowNew, colNew, colour, true, true);
+            boardValidMove = checkBoardValidMove(rowCurr, colCurr, rowNew, colNew, dRow, dCol, true);
         }
 
         board[rowNew][colNew] = board[rowCurr][colCurr];
@@ -235,11 +244,13 @@ void Game::movePiece(char colour) {
         if ((checkWhite == true && colour == 'W') || (checkBlack == true && colour == 'B')) {
             cout << errorKingInCheck;
 
-            board[rowCurr][colCurr] = board[rowNew][colNew];
-            board[rowNew][colNew] = 0;
-        }
+            kingOutOfCheck = false;
 
-    } while ((checkWhite == true && colour == 'W') || (checkBlack == true && colour == 'B'));
+            revertBoard(rowCurr, colCurr, rowNew, colNew);
+        } else {
+            kingOutOfCheck = true;
+        }
+    }
 }
 
 bool Game::checkPieceCanMove(int rowCurr, int colCurr, char colour) {
@@ -353,7 +364,7 @@ bool Game::checkBoardValidMove(int rowCurr, int colCurr, int rowNew, int colNew,
 bool Game::isKingInCheck(char colour) {
     int kingRow, kingCol, dRow, dCol;
 
-    bool pieceValidMove, boardValidMove;
+    bool pieceValidMove = false, boardValidMove = false;
 
     // Identify king position
     for (int r = 0; r < 8; r++) {
@@ -369,6 +380,7 @@ bool Game::isKingInCheck(char colour) {
         }
     }
 
+    // Finds position of opposing pieces, and sees if they are putting the king in check
     for (int r = 0; r < 8; r++) {
         for (int c = 0; c < 8; c++) {
             if (board[r][c] != 0 && board[r][c]->getColour() != colour) {
@@ -384,6 +396,46 @@ bool Game::isKingInCheck(char colour) {
             }
         }
     }
+
+    return false;
+}
+
+void Game::revertBoard(int rowCurr, int colCurr, int rowNew, int colNew) {
+    board[rowCurr][colCurr] = boardCopy[rowCurr][colCurr];
+    board[rowNew][colNew] = boardCopy[rowNew][colNew];
+}
+
+bool Game::canPieceStopCheck(char colour, int rowCurr, int colCurr) {
+    bool kingInCheck = true, pieceCanStopCheck = false, pieceValidMove = false, boardValidMove = false;
+    int dRow, dCol;
+
+    string errorPieceCannotStopCheck = "ERROR: this piece cannot take your king out of check!\n";
+
+    // Finds possible moves the selected piece can perform, and sees if any can take the king out of check
+    for (int r = 0; r < 8; r++) {
+        for (int c = 0; c < 8; c++) {
+            dRow = r - rowCurr;
+            dCol = c - colCurr;
+
+            pieceValidMove = board[rowCurr][colCurr]->validPieceMove(dRow, dCol, false);
+            boardValidMove = checkBoardValidMove(rowCurr, colCurr, r, c, dRow, dCol, false);
+
+            if (pieceValidMove == true && boardValidMove == true) {
+                board[r][c] = board[rowCurr][colCurr];
+                board[rowCurr][colCurr] = 0;
+
+                kingInCheck = isKingInCheck(colour);
+
+                revertBoard(rowCurr, colCurr, r, c);
+
+                if (kingInCheck == false) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    cout << errorPieceCannotStopCheck;
 
     return false;
 }

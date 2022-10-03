@@ -15,6 +15,7 @@ class Game {
 
 private:
     Piece* board[8][8];
+    Piece* boardCopy[8][8];
 
     Menu menu;
 
@@ -47,6 +48,12 @@ public:
 
     // Checks if king is in check
     bool isKingInCheck(char colour);
+
+    // Undo piece move
+    void revertBoard(int rowCurr, int colCurr, int rowNew, int colNew);
+
+    // Checks if selected piece can stop check
+    bool canPieceStopCheck(char colour, int rowCurr, int colCurr);
 };
 
 #endif
