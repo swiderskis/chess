@@ -32,6 +32,24 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Unit filename="Game.cpp" />
+		<Unit filename="Game.hpp" />
+		<Unit filename="Menu.cpp" />
+		<Unit filename="Menu.hpp" />
+		<Unit filename="Piece.cpp" />
+		<Unit filename="Piece.hpp" />
+		<Unit filename="PieceBishop.cpp" />
+		<Unit filename="PieceBishop.hpp" />
+		<Unit filename="PieceKing.cpp" />
+		<Unit filename="PieceKing.hpp" />
+		<Unit filename="PieceKnight.cpp" />
+		<Unit filename="PieceKnight.hpp" />
+		<Unit filename="PiecePawn.cpp" />
+		<Unit filename="PiecePawn.hpp" />
+		<Unit filename="PieceQueen.cpp" />
+		<Unit filename="PieceQueen.hpp" />
+		<Unit filename="PieceRook.cpp" />
+		<Unit filename="PieceRook.hpp" />
 		<Unit filename="main.cpp" />
 		<Extensions />
 	</Project>
